@@ -1,6 +1,15 @@
 # Cargo paquetes a usar
 library(sf)
 library(tidyverse)
+library(terra)
+library(tmap) #paquete para hacer mapas
+
+# Capas geográficas -------------------------------------------------------
+
+# 1.1. Países
+Sudam = rnaturalearth::ne_countries(scale = 10, continent = "south america", returnclass = "sf")
+Argentina = rnaturalearth::ne_countries(scale = 10, country = "argentina", returnclass = "sf")
+
 
 # Explicación del SRI index -----------------------------------------------
 
@@ -54,9 +63,9 @@ Sudam_pa_data = global_pa_data_0c[Sudam, ]
 # Guardo el archivo
 st_write(obj = Sudam_pa_data, dsn = "WDPA_Sudam_terr.gpkg")
 # En el futuro puedo cargar el archivo directamente
-Sudam_pa_data = st_read("WDPA_Sudam_terr.gpkg")
+Sudam_pa_data = st_read("3_WDPA_Sudam_terr.gpkg")
 
-library(tmap) #paquetes para hacer mapas
+# Mapeo PAs
 map_sudam = tm_shape(Sudam) + tm_borders()
 map_sudam
 map_sudam_pa = map_sudam + tm_shape(Sudam_pa_data) + tm_fill(col = "ISO3")
@@ -95,7 +104,7 @@ sri_index = function(x) {
   Sum_RixSi <- cellStats(Prod_RiSi, stat = sum) # Sumatoria de los valores de celdas de pRODUCTO sI_rI
   Sum_Si = cellStats(x, stat = sum) # Sumatoria de valores de pixeles del raster Si
   SRI = Sum_RixSi/Sum_Si 
-  SRI                       # la última línea es lo que mostrará la función
+  SRI                       # la última línea es lo que devolverá la función
 }   
 
 #Calculo SRI en diferentes escenarios climaticos
@@ -149,9 +158,105 @@ base +
   theme_replace()
   
 
+
+# Porcentaje de protección correspondiente a cada país --------------------
+AP_Arg_sf = Sudam_pa_data %>% filter(ISO3 == "ARG")
+AP_Arg_bin_raster = fasterize::fasterize(AP_Arg_sf, Current_Si_raster, field = NULL, background = 0)
+
+sri_indexARG = function(x) {
+  Prod_RiSi <- AP_Arg_bin_raster*x # Primero multiplicar el Si raster con el Ri raster.
+  Sum_RixSi <- cellStats(Prod_RiSi, stat = sum) # Sumatoria de los valores de celdas de pRODUCTO sI_rI
+  Sum_Si = cellStats(x, stat = sum) # Sumatoria de valores de pixeles del raster Si
+  SRI = Sum_RixSi/Sum_Si 
+  SRI                       # la última línea es lo que mostrará la función
+}   
+
+#Calculo SRI por país
+# Para saber cuanto aporta cada país a la proteccipon de la especie
+scenarios_SRI_ARG = lapply(names(Si_rasters), 
+                       function(x){
+                         Prod_RiSi <- AP_Arg_bin_raster*Si_rasters[[x]] # Primero multiplicar el Si raster con el Ri raster.
+                         Sum_RixSi <- cellStats(Prod_RiSi, stat = sum) # Sumatoria de los valores de celdas de pRODUCTO sI_rI
+                         Sum_Si = cellStats(Si_rasters[[x]], stat = sum) # Sumatoria de valores de pixeles del raster Si
+                         SRI = Sum_RixSi/Sum_Si 
+                         SRI      
+                       })
+
+AP_Pry_sf = Sudam_pa_data %>% filter(ISO3 == "PRY")
+AP_Pry_bin_raster = fasterize::fasterize(AP_Pry_sf, Current_Si_raster, field = NULL, background = 0)
+
+sri_indexPRY = function(x) {
+  Prod_RiSi <- AP_Pry_bin_raster*x # Primero multiplicar el Si raster con el Ri raster.
+  Sum_RixSi <- cellStats(Prod_RiSi, stat = sum) # Sumatoria de los valores de celdas de pRODUCTO sI_rI
+  Sum_Si = cellStats(x, stat = sum) # Sumatoria de valores de pixeles del raster Si
+  SRI = Sum_RixSi/Sum_Si 
+  SRI                       # la última línea es lo que mostrará la función
+}   
+
+#Calculo SRI por país
+# Para saber cuanto aporta cada país a la proteccipon de la especie
+scenarios_SRI_PRY = lapply(names(Si_rasters), 
+                           function(x){
+                             Prod_RiSi <- AP_Pry_bin_raster*Si_rasters[[x]] # Primero multiplicar el Si raster con el Ri raster.
+                             Sum_RixSi <- cellStats(Prod_RiSi, stat = sum) # Sumatoria de los valores de celdas de pRODUCTO sI_rI
+                             Sum_Si = cellStats(Si_rasters[[x]], stat = sum) # Sumatoria de valores de pixeles del raster Si
+                             SRI = Sum_RixSi/Sum_Si 
+                             SRI      
+                           })
+
+AP_BOL_sf = Sudam_pa_data %>% filter(ISO3 == "BOL")
+AP_BOL_bin_raster = fasterize::fasterize(AP_BOL_sf, Current_Si_raster, field = NULL, background = 0)
+
+sri_indexBOL = function(x) {
+  Prod_RiSi <- AP_BOL_bin_raster*x # Primero multiplicar el Si raster con el Ri raster.
+  Sum_RixSi <- cellStats(Prod_RiSi, stat = sum) # Sumatoria de los valores de celdas de pRODUCTO sI_rI
+  Sum_Si = cellStats(x, stat = sum) # Sumatoria de valores de pixeles del raster Si
+  SRI = Sum_RixSi/Sum_Si 
+  SRI                       # la última línea es lo que mostrará la función
+}   
+
+#Calculo SRI por país
+# Para saber cuanto aporta cada país a la proteccipon de la especie
+scenarios_SRI_BOL = lapply(names(Si_rasters), 
+                           function(x){
+                             Prod_RiSi <- AP_BOL_bin_raster*Si_rasters[[x]] # Primero multiplicar el Si raster con el Ri raster.
+                             Sum_RixSi <- cellStats(Prod_RiSi, stat = sum) # Sumatoria de los valores de celdas de pRODUCTO sI_rI
+                             Sum_Si = cellStats(Si_rasters[[x]], stat = sum) # Sumatoria de valores de pixeles del raster Si
+                             SRI = Sum_RixSi/Sum_Si 
+                             SRI      
+                           })
+
+AP_BRA_sf = Sudam_pa_data %>% filter(ISO3 == "BRA")
+AP_BRA_bin_raster = fasterize::fasterize(AP_BRA_sf, Current_Si_raster, field = NULL, background = 0)
+
+sri_indexBRA = function(x) {
+  Prod_RiSi <- AP_BRA_bin_raster*x # Primero multiplicar el Si raster con el Ri raster.
+  Sum_RixSi <- cellStats(Prod_RiSi, stat = sum) # Sumatoria de los valores de celdas de pRODUCTO sI_rI
+  Sum_Si = cellStats(x, stat = sum) # Sumatoria de valores de pixeles del raster Si
+  SRI = Sum_RixSi/Sum_Si 
+  SRI                       # la última línea es lo que mostrará la función
+}   
+
+#Calculo SRI por país
+# Para saber cuanto aporta cada país a la proteccipon de la especie
+scenarios_SRI_BRA = lapply(names(Si_rasters), 
+                           function(x){
+                             Prod_RiSi <- AP_BRA_bin_raster*Si_rasters[[x]] # Primero multiplicar el Si raster con el Ri raster.
+                             Sum_RixSi <- cellStats(Prod_RiSi, stat = sum) # Sumatoria de los valores de celdas de pRODUCTO sI_rI
+                             Sum_Si = cellStats(Si_rasters[[x]], stat = sum) # Sumatoria de valores de pixeles del raster Si
+                             SRI = Sum_RixSi/Sum_Si 
+                             SRI      
+                           })
+
+
+
+
 # Mapas de Proteccion de la especie ---------------------------------------
 # Calculo para cada tiempo el valor de proteccion del pixel (Pi = Si x Ri)
 # Eso sería para cada pixel.
+
+
+
 # Puedo analizar como cambia los mapas de proteccion del presente al futuro 
 # ploteando la incerteza?
 
